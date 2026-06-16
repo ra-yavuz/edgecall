@@ -1,0 +1,9 @@
+edgecall (0.1.0-1) unstable; urgency=low
+
+  * Initial release. Route plain-language requests to pre-registered
+    functions using a weak local model and a paginated menu.
+  * OpenAI-compatible /v1/chat/completions shim plus native /v1/dispatch.
+  * Drop-in function autoloader; example functions for message-of-the-day
+    (from a text file), gold price, weather, time, and dice.
+
+ -- Ramazan Yavuz <yavuzramazan1994@gmail.com>  Tue, 16 Jun 2026 12:00:00 +0000

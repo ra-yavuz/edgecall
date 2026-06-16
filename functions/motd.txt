@@ -1,0 +1,2 @@
+Welcome to edgecall. A weak model just routed your request to a real
+function and ran it. Edit this file (or set EDGECALL_MOTD) to change me.

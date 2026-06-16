@@ -1,0 +1,21 @@
+#!/bin/sh
+# edgecall postinst: byte-compile the package and print a short pointer.
+set -e
+
+case "$1" in
+    configure)
+        # Byte-compile the installed package so first run is not slowed by it.
+        if command -v py3compile >/dev/null 2>&1; then
+            py3compile -p edgecall /usr/lib/edgecall 2>/dev/null || true
+        fi
+        echo "edgecall installed."
+        echo "  edgecall functions   list registered functions"
+        echo "  edgecall serve       run the API (point --model-base-url at your endpoint)"
+        echo "  Add functions to /usr/share/edgecall/functions/ (see its README.md)."
+        echo "DISCLAIMER: provided AS IS, no warranty. A weak model may route to the"
+        echo "wrong function; edgecall runs whatever it picks. You accept all risk."
+        ;;
+esac
+
+#DEBHELPER#
+exit 0

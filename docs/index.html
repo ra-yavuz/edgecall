@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>edgecall: route plain-language requests to your functions with a weak local model</title>
+<meta name="description" content="edgecall is a small open-source, self-hosted, OpenAI-compatible API by Ramazan Yavuz. A deliberately weak local model (phi3-class, runs on a Raspberry Pi or phone) reads a short paginated menu of your registered functions, picks one, and edgecall runs it. No embedding model, no index. Add functions by dropping in a Python file. Talks to any OpenAI-compatible /v1 endpoint.">
+<meta name="author" content="Ramazan Yavuz">
+<meta name="keywords" content="edgecall, edge function calling, weak model router, raspberry pi llm, phi3 function calling, openai compatible api, self-hosted tool dispatch, local llm, ollama, llama.cpp, hydra-llm, intent to function, paginated tools">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://ra-yavuz.github.io/edgecall/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="edgecall: route plain-language requests to your functions with a weak local model">
+<meta property="og:description" content="A weak local model picks one of your registered functions off a short paginated menu, and edgecall runs it. No index, no retraining. OpenAI-compatible, self-hosted, made for edge hardware.">
+<meta property="og:url" content="https://ra-yavuz.github.io/edgecall/">
+<meta property="og:site_name" content="ra-yavuz">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="edgecall: route plain-language requests to your functions with a weak local model">
+<meta name="twitter:description" content="A weak local model picks one of your registered functions off a short paginated menu, and edgecall runs it. OpenAI-compatible, self-hosted.">
+<style>
+  :root {
+    --fg: #1a1a1a;
+    --muted: #5e5e5e;
+    --bg: #f4f1ec;
+    --card: #ffffff;
+    --line: #d8d4cc;
+    --code-bg: #ebe7e0;
+    --link: #0a4ca8;
+    --apt-bg: #eef2f8;
+    --warn-bg: #fff7d6;
+    --warn-fg: #5a4500;
+    --warn-line: #e8d36b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fg: #ececec;
+      --muted: #9a9a9a;
+      --bg: #1c1d20;
+      --card: #25272b;
+      --line: #353941;
+      --code-bg: #14151a;
+      --link: #7cb0ff;
+      --apt-bg: #1f242d;
+      --warn-bg: #3a2e00;
+      --warn-fg: #f6e2a4;
+      --warn-line: #6a5500;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { overflow-x: hidden; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--fg); background: var(--bg);
+    line-height: 1.55;
+    overflow-wrap: break-word;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 24px 96px; }
+  @media (max-width: 540px) {
+    main { padding: 28px 16px 64px; }
+  }
+  .crumb { font-size: 0.86rem; color: var(--muted); margin: 0 0 18px; }
+  .brand {
+    position: fixed; top: 20px; right: 24px;
+    width: 110px; height: 110px;
+    object-fit: contain; object-position: top right;
+    pointer-events: none; z-index: 10;
+  }
+  @media (prefers-color-scheme: dark) { .brand { filter: invert(1); } }
+  @media (max-width: 720px) { .brand { width: 76px; height: 76px; top: 12px; right: 12px; } }
+  @media (max-width: 480px) { .brand { display: none; } }
+  h1 { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1.7rem; margin: 0 0 6px; letter-spacing: -0.005em; }
+  p.tag { color: var(--muted); margin: 0 0 18px; font-size: 1rem; max-width: 60ch; }
+  h2 {
+    font-size: 1rem; margin: 36px 0 10px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600;
+  }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    background: var(--code-bg); padding: 1px 5px; border-radius: 3px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.9em;
+  }
+  pre {
+    background: var(--code-bg); padding: 12px 14px; border-radius: 6px;
+    border: 1px solid var(--line); overflow-x: auto;
+    font-size: 0.86rem; line-height: 1.55; margin: 0;
+  }
+  pre code { background: transparent; padding: 0; }
+  .links-row a { margin-right: 14px; font-size: 0.95rem; }
+  .apt-section {
+    background: var(--apt-bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px 18px;
+  }
+  .apt-section h2 { margin-top: 0; }
+  .warn {
+    background: var(--warn-bg); color: var(--warn-fg);
+    border-left: 4px solid var(--warn-line);
+    padding: 12px 16px; border-radius: 4px;
+    font-size: 0.9rem; margin: 12px 0 0;
+  }
+  table.matrix { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+  table.matrix th, table.matrix td {
+    text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  table.matrix th { color: var(--muted); font-weight: 600; }
+  footer {
+    margin-top: 56px; color: var(--muted); font-size: 0.85rem;
+    border-top: 1px solid var(--line); padding-top: 14px;
+  }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "edgecall",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Linux",
+  "description": "A small self-hosted, OpenAI-compatible API. A deliberately weak local model reads a short paginated menu of your registered functions, picks one, and edgecall runs it and returns the result. No embedding model, no index. Talks to any OpenAI-compatible /v1 endpoint.",
+  "url": "https://ra-yavuz.github.io/edgecall/",
+  "downloadUrl": "https://github.com/ra-yavuz/edgecall/releases",
+  "softwareVersion": "0.1.0",
+  "license": "https://opensource.org/licenses/MIT",
+  "author": {
+    "@type": "Person",
+    "name": "Ramazan Yavuz",
+    "url": "https://ra-yavuz.github.io/"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+</script>
+</head>
+<body>
+<main>
+  <p class="crumb">
+    <a href="https://ra-yavuz.github.io/">ra-yavuz</a> &rsaquo; edgecall
+  </p>
+
+  <picture><source srcset="logo.webp" type="image/webp"><img class="brand" src="logo.png" alt="edgecall logo"></picture>
+  <h1>edgecall</h1>
+  <p class="tag">
+    A small self-hosted, OpenAI-compatible API. You POST a sentence like
+    "what is the gold price"; a deliberately weak local model (phi3-class,
+    the kind that runs on a Raspberry Pi or a phone) reads a short menu of
+    your registered functions, picks one, and edgecall runs it and returns
+    the result.
+  </p>
+  <p class="tag">
+    The whole trick: the model never sees your full function list. Functions
+    are shown a few at a time as a numbered menu, and the model pages through
+    with a "next" option until it picks one. Picking one item off a short
+    list is the easiest thing a weak model can do, so a weak model is enough.
+    No embedding model, no index to maintain.
+  </p>
+
+  <div class="links-row">
+    <a href="https://github.com/ra-yavuz/edgecall">source</a>
+    <a href="https://github.com/ra-yavuz/edgecall/releases">releases</a>
+    <a href="#install">install</a>
+    <a href="https://github.com/ra-yavuz/edgecall/issues">issues</a>
+  </div>
+
+  <h2>How it works</h2>
+<pre><code>request: "i need to know the current gold price"
+   |
+   v
+edgecall shows the weak model menu page 0:
+   0001  show the message of the day
+   0002  find the current gold price
+   0003  get the current weather for a location
+   NEXT  none of these, see more options
+   |
+   model replies: 0002
+   v
+edgecall runs function 0002 -> { "price": 4347.1, "currency": "USD", ... }</code></pre>
+  <p>
+    If the right function is not on the current page, the model replies
+    <code>NEXT</code> and edgecall shows the next page. Pages are just slices
+    of your function list in registration order. The trade-off: a function
+    deep in the list costs the model one <code>NEXT</code> per page to reach,
+    and weak models page blindly, so put your most-used functions first.
+  </p>
+
+  <h2>What it is for</h2>
+  <p>
+    You want useful pre-programmed actions triggered by natural language, but
+    you do not want to pay for a frontier model or send anything to the
+    cloud. edgecall lets a cheap local model do the routing while the actual
+    work stays in plain Python functions you control. It does not host a
+    model: it talks to any OpenAI-compatible <code>/v1</code> endpoint you
+    already run (llama.cpp, ollama, LM Studio, or a sibling
+    <a href="https://ra-yavuz.github.io/hydra-llm/">hydra-llm</a> server).
+  </p>
+
+  <h2>Add a function</h2>
+  <p>
+    Every <code>*.py</code> file in the functions directory is autoloaded at
+    startup. Give it an id and a one-line description:
+  </p>
+<pre><code>from edgecall.registry import register
+
+@register(id="0006", desc="say hello to a name")
+def run(args):
+    name = args.get("name", "world")
+    return {"greeting": f"hello, {name}"}</code></pre>
+  <p>
+    <code>args["request"]</code> is always the original sentence; other keys
+    are whatever the caller passed. Return any JSON-serialisable value. The
+    bundled examples include a message-of-the-day function served from a text
+    file, plus live gold-price and weather lookups over public no-key APIs.
+  </p>
+
+  <h2>API</h2>
+  <table class="matrix">
+    <tr><th>Endpoint</th><th>What it does</th></tr>
+    <tr><td><code>POST /v1/dispatch</code></td><td>edgecall-native. Body <code>{"request": "...", "args": {...}, "trace": false}</code>; returns the chosen function id, its result, and optionally the full decision trace.</td></tr>
+    <tr><td><code>POST /v1/chat/completions</code></td><td>OpenAI-compatible shim. The last user message is the request; the function result comes back as the assistant message content. One request, one function.</td></tr>
+    <tr><td><code>GET /v1/functions</code></td><td>list registered functions</td></tr>
+    <tr><td><code>GET /healthz</code></td><td>liveness</td></tr>
+  </table>
+
+  <h2 id="install">Install (Debian / Ubuntu)</h2>
+  <div class="apt-section">
+    <h2>From the signed apt repository</h2>
+    <p>One line. Sets up the signed repo if not already added, refreshes the index, installs edgecall:</p>
+<pre><code>sudo bash -c 'set -e; install -m 0755 -d /etc/apt/keyrings &amp;&amp; curl -fsSL https://ra-yavuz.github.io/apt/pubkey.gpg -o /etc/apt/keyrings/ra-yavuz.gpg &amp;&amp; echo "deb [signed-by=/etc/apt/keyrings/ra-yavuz.gpg] https://ra-yavuz.github.io/apt stable main" &gt; /etc/apt/sources.list.d/ra-yavuz.list &amp;&amp; apt update &amp;&amp; apt install -y edgecall'</code></pre>
+    <p>Or grab the <code>.deb</code> from <a href="https://github.com/ra-yavuz/edgecall/releases">Releases</a> and <code>sudo apt install ./edgecall_*.deb</code>.</p>
+  </div>
+  <p style="margin-top:16px;">Then:</p>
+<pre><code>edgecall functions                            # list what is registered
+edgecall serve                                # run the API on 127.0.0.1:8900
+edgecall dispatch "what time is it" --trace   # route one request, no server</code></pre>
+
+  <h2>Run with Docker Compose</h2>
+<pre><code>git clone https://github.com/ra-yavuz/edgecall
+cd edgecall
+# Edit docker-compose.yml: set EDGECALL_MODEL_BASE_URL to your endpoint.
+docker compose up -d
+
+curl -s -X POST localhost:8900/v1/dispatch \
+     -H 'content-type: application/json' \
+     -d '{"request":"what is the gold price"}'</code></pre>
+
+  <h2>The honest limitation</h2>
+  <p>
+    A weak model picking from a menu will sometimes pick wrong, and edgecall
+    will faithfully run whatever it picked. That is the deal you accept for
+    not paying for a frontier model. Mitigations baked in: a tight
+    low-temperature reply, strict parsing (only an id actually on the page is
+    accepted), bounded retries, and a full decision trace so you can see why
+    a wrong call happened. For high-stakes actions, gate the function itself;
+    do not rely on the model's pick alone.
+  </p>
+
+  <div class="warn">
+    <strong>Disclaimer:</strong> edgecall is provided AS IS, WITHOUT WARRANTY
+    OF ANY KIND. It runs functions you register, on inputs chosen by an
+    unreliable language model, and exposes an HTTP API on a local port. The
+    model will sometimes route a request to the wrong function and edgecall
+    will run it. <strong>You alone are responsible for any damage to your
+    data, hardware, or system, and for what your functions do.</strong> Do
+    not rely on it for safety-critical actions. By installing or running this
+    software you accept full risk. See
+    <a href="https://github.com/ra-yavuz/edgecall/blob/main/README.md#disclaimer--no-warranty">README</a>
+    for the full text.
+  </div>
+
+  <footer>
+    <p>
+      edgecall is open source software by
+      <a href="https://ramazan-yavuz.tr">Ramazan Yavuz</a>, MIT licensed.
+      Source on <a href="https://github.com/ra-yavuz/edgecall">GitHub</a>.
+    </p>
+    <p style="font-size:0.78rem;opacity:0.7;margin-top:14px;line-height:1.6;">
+      This page does not use cookies, tracking, or analytics. Outbound links lead to third-party websites outside our control; we are not liable for their content or privacy practices.
+    </p>
+  </footer>
+</main>
+</body>
+</html>

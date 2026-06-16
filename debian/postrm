@@ -1,0 +1,15 @@
+#!/bin/sh
+# edgecall postrm: clean up byte-compiled files on purge.
+set -e
+
+case "$1" in
+    purge|remove)
+        if command -v py3clean >/dev/null 2>&1; then
+            py3clean -p edgecall 2>/dev/null || true
+        fi
+        find /usr/lib/edgecall -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
+        ;;
+esac
+
+#DEBHELPER#
+exit 0

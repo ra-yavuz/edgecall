@@ -1,0 +1,46 @@
+Source: edgecall
+Section: utils
+Priority: optional
+Maintainer: Ramazan Yavuz <yavuzramazan1994@gmail.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://github.com/ra-yavuz/edgecall
+Vcs-Git: https://github.com/ra-yavuz/edgecall.git
+Vcs-Browser: https://github.com/ra-yavuz/edgecall
+Rules-Requires-Root: no
+
+Package: edgecall
+Architecture: all
+Depends: ${misc:Depends},
+         python3 (>= 3.10),
+         python3-fastapi,
+         python3-uvicorn,
+         python3-httpx,
+         python3-pydantic
+Description: route plain-language requests to your functions with a weak local model
+ edgecall is a small self-hosted, OpenAI-compatible API. You POST a sentence
+ and a deliberately weak local model (phi3-class, the kind that runs on a
+ Raspberry Pi or a phone) reads a short paginated menu of your registered
+ functions, picks one, and edgecall runs it and returns the result.
+ .
+ The model never sees the whole function list at once: functions are shown a
+ few at a time as a numbered menu, and the model pages through with a "next"
+ option until it picks one. Picking one item off a short list is the easiest
+ thing a weak model can do, so a weak model is enough. There is no embedding
+ model and no index to maintain.
+ .
+ edgecall does not host a model; it talks to any OpenAI-compatible endpoint
+ you already run (llama.cpp, ollama, LM Studio, hydra-llm). Add a function
+ by dropping a Python file into the functions directory with an id and a
+ one-line description; no retraining.
+ .
+ Bundled examples include a message-of-the-day function served from a text
+ file, and live gold-price and weather lookups over public no-key APIs.
+ .
+ DISCLAIMER: This software runs functions you register, on inputs chosen by
+ an unreliable language model, and exposes an HTTP API on a local port. It
+ is provided AS IS, WITHOUT WARRANTY OF ANY KIND. The model will sometimes
+ route a request to the wrong function and edgecall will run it; do not rely
+ on it for safety-critical actions. The author is not liable for any damage
+ to hardware, data, or system, or for model output or function results. See
+ /usr/share/doc/edgecall/README.md for the full disclaimer.

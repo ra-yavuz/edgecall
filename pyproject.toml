@@ -1,0 +1,46 @@
+[project]
+name = "edgecall"
+version = "0.1.0"
+description = "Route a plain-language request to a pre-registered function using a weak local model and a paginated menu. OpenAI-compatible."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Ramazan Yavuz", email = "yavuzramazan1994@gmail.com" }]
+keywords = ["edge", "function-calling", "router", "dispatch", "openai-compatible", "raspberry-pi", "self-hosted"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn>=0.27",
+    "httpx>=0.27",
+    "pydantic>=2.5",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0"]
+
+[project.urls]
+Homepage = "https://github.com/ra-yavuz/edgecall"
+Repository = "https://github.com/ra-yavuz/edgecall"
+Issues = "https://github.com/ra-yavuz/edgecall/issues"
+
+[project.scripts]
+edgecall = "edgecall.__main__:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = { "" = "lib" }
+
+[tool.setuptools.packages.find]
+where = ["lib"]
+include = ["edgecall*"]

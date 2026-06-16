@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+"""edgecall launcher.
+
+Works both from a git clone (lib/ next to this file via ../lib) and from a
+.deb install (package at /usr/lib/edgecall). It prepends whichever location
+holds the edgecall package to sys.path, then hands off to the CLI.
+"""
+
+import os
+import sys
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+# Each candidate is a directory that should DIRECTLY contain the edgecall
+# package (i.e. <candidate>/edgecall/__init__.py exists). Order matters:
+# a git clone's lib/ takes precedence over the system install location.
+_CANDIDATES = [
+    os.path.join(_HERE, "..", "lib"),       # git clone: <repo>/lib/edgecall
+    "/usr/lib/edgecall",                     # .deb:      /usr/lib/edgecall/edgecall
+]
+for _c in _CANDIDATES:
+    # Require the package's __init__.py, not just a same-named directory, so
+    # we never match a parent dir that merely shares the name "edgecall".
+    if os.path.isfile(os.path.join(_c, "edgecall", "__init__.py")):
+        sys.path.insert(0, os.path.abspath(_c))
+        break
+
+from edgecall.__main__ import main  # noqa: E402
+
+if __name__ == "__main__":
+    sys.exit(main())

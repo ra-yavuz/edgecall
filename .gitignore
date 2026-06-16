@@ -1,0 +1,30 @@
+# Shell history accidentally written to the repo root
+.bash_history
+
+# Build artifacts
+dist/
+build/
+*.deb
+*.egg-info/
+__pycache__/
+*.pyc
+*.pyo
+
+# Dev virtualenv
+.venv-dev/
+.venv/
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Secrets must never end up in the repo
+*.token
+*.key
+.env
+.env.*
+
+# Local-only docs that intentionally don't ship
+RELEASE.md

@@ -1,0 +1,42 @@
+# edgecall with Docker Compose.
+#
+# Quick start:
+#
+#   docker compose up -d
+#   curl -s localhost:8900/ | head
+#   curl -s -X POST localhost:8900/v1/dispatch \
+#        -H 'content-type: application/json' \
+#        -d '{"request":"what is the gold price"}'
+#
+# edgecall is a dispatcher, not a model host. It needs an OpenAI-compatible
+# endpoint to decide which function to run. Set EDGECALL_MODEL_BASE_URL to
+# yours. The default below points at a model server on the host (ollama,
+# llama.cpp, LM Studio, or hydra-llm) via host.docker.internal.
+#
+# Drop new function files into ./functions on the host; they are mounted in
+# and loaded at startup (restart the container to pick up changes).
+
+services:
+  edgecall:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: edgecall:latest
+    ports:
+      - "8900:8900"
+    environment:
+      # Point this at YOUR OpenAI-compatible endpoint.
+      - EDGECALL_MODEL_BASE_URL=http://host.docker.internal:11434/v1
+      - EDGECALL_MODEL=phi3
+      # Bind inside the container; the port mapping above exposes it.
+      - EDGECALL_HOST=0.0.0.0
+      - EDGECALL_PORT=8900
+      - EDGECALL_FUNCTIONS_DIR=/opt/edgecall/functions
+    volumes:
+      # Your functions, editable from the host. Restart to reload.
+      - ./functions:/opt/edgecall/functions:ro
+    extra_hosts:
+      # Lets the container reach a model server running on the host
+      # (Docker Engine on Linux; Docker Desktop provides this already).
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
